@@ -1,3 +1,4 @@
+import { useState, type FormEvent } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -5,11 +6,42 @@ import { CountdownTimer } from './CountdownTimer';
 import { Input } from './ui/input';
 import { Terminal, Users, PlayCircle, Zap, MessageSquare, MapPin, Calendar } from 'lucide-react';
 
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxe4KUoZ5CivXjFt47S3ZmLIlL58lADJtzAOBxY577bFzD4k8iYdG6wfUt-m6MI_Rl-nA/exec';
+
 export function Hero() {
+  const [role, setRole] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [message, setMessage] = useState('');
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+
+    setIsSubmitting(true);
+    setMessage('');
+
+    try {
+      await fetch(GOOGLE_SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        body: formData,
+      });
+
+      setMessage('Registration successful. Check your inbox for updates.');
+      form.reset();
+      setRole('');
+    } catch (error) {
+      setMessage('Something went wrong. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <section className="relative pt-32 pb-20 px-6 overflow-hidden">
       <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-start">
-        
         {/* Left Side: Content */}
         <motion.div
           initial={{ opacity: 0, x: -50 }}
@@ -23,15 +55,17 @@ export function Hero() {
               <span className="w-2 h-2 rounded-full bg-primary" />
               LIVE MASTERCLASS
             </Badge>
-            <span className="text-sm text-secondary-foreground font-bold uppercase">Sat, 9 May | 8:00 PM</span>
+            <span className="text-sm text-secondary-foreground font-bold uppercase">
+              Sat, 9 May | 8:00 PM
+            </span>
           </div>
 
           <h1 className="text-5xl md:text-7xl lg:text-8xl font-heading font-black text-white mb-8 leading-[1.1]">
-            Run Smarter <br/>
-            Meta Ads Using <br/>
+            Run Smarter <br />
+            Meta Ads Using <br />
             <span className="text-primary relative inline-block">
               Claude & ChatGPT
-              <motion.div 
+              <motion.div
                 className="absolute -inset-2 bg-primary/20 blur-2xl rounded-full z-[-1]"
                 animate={{ opacity: [0.5, 0.8, 0.5] }}
                 transition={{ duration: 3, repeat: Infinity }}
@@ -63,7 +97,9 @@ export function Hero() {
           </div>
 
           <div className="space-y-4">
-            <span className="text-sm font-bold text-secondary-foreground/60 uppercase tracking-widest block">Event starts in:</span>
+            <span className="text-sm font-bold text-secondary-foreground/60 uppercase tracking-widest block">
+              Event starts in:
+            </span>
             <CountdownTimer />
           </div>
         </motion.div>
@@ -79,26 +115,39 @@ export function Hero() {
         >
           <div className="glass p-8 md:p-10 rounded-[2.5rem] relative z-10 border-white/10 shadow-2xl">
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-1 bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
-            
+
             <div className="text-center mb-8">
-              <h3 className="text-2xl md:text-3xl font-heading font-bold mb-2 uppercase">Reserve Your Spot</h3>
-              <p className="text-secondary-foreground text-[10px] font-bold uppercase tracking-wider">Limited seats available. Reserve now.</p>
+              <h3 className="text-2xl md:text-3xl font-heading font-bold mb-2 uppercase">
+                Reserve Your Spot
+              </h3>
+              <p className="text-secondary-foreground text-[10px] font-bold uppercase tracking-wider">
+                Limited seats available. Reserve now.
+              </p>
             </div>
 
-            <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+            <form className="space-y-6" onSubmit={handleSubmit}>
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-[10px] uppercase tracking-wider font-bold text-secondary-foreground flex items-center gap-2">
                     <Users className="w-3 h-3" /> Full Name
                   </label>
-                  <Input required className="h-14 bg-white/[0.03] border-white/10 focus:border-primary/50 text-base rounded-xl" />
+                  <Input
+                    name="fullName"
+                    required
+                    className="h-14 bg-white/[0.03] border-white/10 focus:border-primary/50 text-base rounded-xl"
+                  />
                 </div>
 
                 <div className="space-y-2">
                   <label className="text-[10px] uppercase tracking-wider font-bold text-secondary-foreground flex items-center gap-2">
                     <Terminal className="w-3 h-3" /> Email Address
                   </label>
-                  <Input required type="email" className="h-14 bg-white/[0.03] border-white/10 focus:border-primary/50 text-base rounded-xl" />
+                  <Input
+                    name="email"
+                    required
+                    type="email"
+                    className="h-14 bg-white/[0.03] border-white/10 focus:border-primary/50 text-base rounded-xl"
+                  />
                 </div>
               </div>
 
@@ -107,14 +156,23 @@ export function Hero() {
                   <label className="text-[10px] uppercase tracking-wider font-bold text-secondary-foreground flex items-center gap-2">
                     <MessageSquare className="w-3 h-3" /> Phone Number
                   </label>
-                  <Input required type="tel" className="h-14 bg-white/[0.03] border-white/10 focus:border-primary/50 text-base rounded-xl" />
+                  <Input
+                    name="phone"
+                    required
+                    type="tel"
+                    className="h-14 bg-white/[0.03] border-white/10 focus:border-primary/50 text-base rounded-xl"
+                  />
                 </div>
 
                 <div className="space-y-2">
                   <label className="text-[10px] uppercase tracking-wider font-bold text-secondary-foreground flex items-center gap-2">
                     <MapPin className="w-3 h-3" /> City
                   </label>
-                  <Input required className="h-14 bg-white/[0.03] border-white/10 focus:border-primary/50 text-base rounded-xl" />
+                  <Input
+                    name="city"
+                    required
+                    className="h-14 bg-white/[0.03] border-white/10 focus:border-primary/50 text-base rounded-xl"
+                  />
                 </div>
               </div>
 
@@ -123,19 +181,12 @@ export function Hero() {
                   Which best describes you?
                 </label>
                 <div className="space-y-3">
-                  <select 
-                    id="role-select"
+                  <select
+                    name="role"
                     className="w-full h-14 bg-white/[0.03] border border-white/10 focus:border-primary/50 text-base rounded-xl px-4 appearance-none text-white font-medium"
                     required
-                    defaultValue=""
-                    onChange={(e) => {
-                      const otherBox = document.getElementById('other-role');
-                      if (e.target.value === 'other') {
-                        otherBox?.classList.remove('hidden');
-                      } else {
-                        otherBox?.classList.add('hidden');
-                      }
-                    }}
+                    value={role}
+                    onChange={(e) => setRole(e.target.value)}
                   >
                     <option value="" className="bg-background">Select your role</option>
                     <option value="student" className="bg-background">Student</option>
@@ -147,7 +198,14 @@ export function Hero() {
                     <option value="coach" className="bg-background">Coach / Consultant</option>
                     <option value="other" className="bg-background">Other</option>
                   </select>
-                  <Input id="other-role" className="h-14 bg-white/[0.03] border-white/10 focus:border-primary/50 text-base rounded-xl hidden" />
+
+                  {role === 'other' && (
+                    <Input
+                      name="otherRole"
+                      placeholder="Please mention your role"
+                      className="h-14 bg-white/[0.03] border-white/10 focus:border-primary/50 text-base rounded-xl"
+                    />
+                  )}
                 </div>
               </div>
 
@@ -155,26 +213,26 @@ export function Hero() {
                 <label className="text-[10px] uppercase tracking-wider font-bold text-secondary-foreground">
                   Have you ever run Meta ads before?
                 </label>
-                <div className="space-y-4">
-                  <select 
-                    className="w-full h-14 bg-white/[0.03] border border-white/10 focus:border-primary/50 text-base rounded-xl px-4 appearance-none text-white font-medium"
-                    required
-                    defaultValue=""
-                  >
-                    <option value="" className="bg-background">Choose option</option>
-                    <option value="yes" className="bg-background">Yes, I have run ads before</option>
-                    <option value="tried-no-results" className="bg-background">I tried but did not get results</option>
-                    <option value="no-want-to-learn" className="bg-background">No, but I want to learn</option>
-                    <option value="manage-clients" className="bg-background">I manage ads for clients...</option>
-                  </select>
-                </div>
+                <select
+                  name="metaAdsExperience"
+                  className="w-full h-14 bg-white/[0.03] border border-white/10 focus:border-primary/50 text-base rounded-xl px-4 appearance-none text-white font-medium"
+                  required
+                  defaultValue=""
+                >
+                  <option value="" className="bg-background">Choose option</option>
+                  <option value="yes" className="bg-background">Yes, I have run ads before</option>
+                  <option value="tried-no-results" className="bg-background">I tried but did not get results</option>
+                  <option value="no-want-to-learn" className="bg-background">No, but I want to learn</option>
+                  <option value="manage-clients" className="bg-background">I manage ads for clients...</option>
+                </select>
               </div>
 
               <div className="space-y-2">
                 <label className="text-[10px] uppercase tracking-wider font-bold text-secondary-foreground">
                   Why do you want to attend this masterclass?
                 </label>
-                <select 
+                <select
+                  name="reason"
                   className="w-full h-14 bg-white/[0.03] border border-white/10 focus:border-primary/50 text-base rounded-xl px-4 appearance-none text-white font-medium"
                   required
                   defaultValue=""
@@ -188,11 +246,22 @@ export function Hero() {
                   <option value="just-exploring" className="bg-background">Just exploring</option>
                 </select>
               </div>
-              
-              <Button size="xl" className="w-full h-16 md:h-18 text-base md:text-lg font-bold rounded-xl md:rounded-2xl glow-orange group transition-all duration-300 uppercase tracking-widest shadow-2xl shadow-primary/30">
-                Register Now →
+
+              <Button
+                type="submit"
+                size="xl"
+                disabled={isSubmitting}
+                className="w-full h-16 md:h-18 text-base md:text-lg font-bold rounded-xl md:rounded-2xl glow-orange group transition-all duration-300 uppercase tracking-widest shadow-2xl shadow-primary/30 disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                {isSubmitting ? 'Submitting...' : 'Register Now →'}
               </Button>
-              
+
+              {message && (
+                <p className="text-center text-xs font-bold uppercase tracking-wider text-primary">
+                  {message}
+                </p>
+              )}
+
               <div className="text-center pt-4 border-t border-white/5 space-y-3">
                 <p className="text-[10px] text-secondary-foreground uppercase tracking-widest font-bold">
                   No spam. Ever. Zoom link delivered to your inbox instantly.
@@ -207,10 +276,8 @@ export function Hero() {
             </form>
           </div>
 
-          {/* Background Decorative Glow */}
           <div className="absolute -z-10 blur-[100px] opacity-20 bg-primary w-full h-full inset-0 rounded-full" />
         </motion.div>
-
       </div>
     </section>
   );
