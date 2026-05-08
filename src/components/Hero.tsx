@@ -95,7 +95,7 @@ export function Hero() {
             </div>
             <div className="flex flex-col gap-2 p-4 glass rounded-2xl border-white/5">
               <PlayCircle className="w-5 h-5 text-primary" />
-              <span className="text-sm font-bold">90 Mins Live</span>
+              <span className="text-sm font-bold">3 hrs Live</span>
             </div>
             <div className="flex flex-col gap-2 p-4 glass rounded-2xl border-white/5">
               <Users className="w-5 h-5 text-primary" />
