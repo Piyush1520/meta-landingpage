@@ -1,8 +1,7 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { CountdownTimer } from './CountdownTimer';
 import { Input } from './ui/input';
 import {
   Terminal,
@@ -18,11 +17,104 @@ import {
 const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxe4KUoZ5CivXjFt47S3ZmLIlL58lADJtzAOBxY577bFzD4k8iYdG6wfUt-m6MI_Rl-nA/exec';
 const WHATSAPP_COMMUNITY_URL = 'https://chat.whatsapp.com/JuplKQlRA88AphYwf4lvL3';
 
+const MASTERCLASS_DATE_TIME = '2026-05-16T20:00:00+05:30';
+
+function getTimeLeft(targetDate: Date) {
+  const difference = targetDate.getTime() - Date.now();
+
+  if (difference <= 0) {
+    return {
+      days: 0,
+      hours: 0,
+      minutes: 0,
+      seconds: 0,
+      isStarted: true,
+    };
+  }
+
+  return {
+    days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+    hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+    minutes: Math.floor((difference / (1000 * 60)) % 60),
+    seconds: Math.floor((difference / 1000) % 60),
+    isStarted: false,
+  };
+}
+
+function formatEventDate(targetDate: Date) {
+  return new Intl.DateTimeFormat('en-IN', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+    timeZone: 'Asia/Kolkata',
+  })
+    .format(targetDate)
+    .replace(',', ' |');
+}
+
+function formatEventDay(targetDate: Date) {
+  return new Intl.DateTimeFormat('en-IN', {
+    weekday: 'long',
+    timeZone: 'Asia/Kolkata',
+  }).format(targetDate);
+}
+
+function CountdownTimer({ targetDate }: { targetDate: Date }) {
+  const [timeLeft, setTimeLeft] = useState(() => getTimeLeft(targetDate));
+
+  useEffect(() => {
+    setTimeLeft(getTimeLeft(targetDate));
+
+    const timer = window.setInterval(() => {
+      setTimeLeft(getTimeLeft(targetDate));
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, [targetDate]);
+
+  if (timeLeft.isStarted) {
+    return (
+      <div className="glass rounded-2xl border-white/5 p-5 text-primary font-black uppercase tracking-widest">
+        Masterclass is live now
+      </div>
+    );
+  }
+
+  const timerItems = [
+    { label: 'Days', value: timeLeft.days },
+    { label: 'Hours', value: timeLeft.hours },
+    { label: 'Minutes', value: timeLeft.minutes },
+    { label: 'Seconds', value: timeLeft.seconds },
+  ];
+
+  return (
+    <div className="grid grid-cols-4 gap-3 max-w-xl">
+      {timerItems.map((item) => (
+        <div key={item.label} className="glass rounded-2xl border-white/5 p-4 text-center">
+          <div className="text-2xl md:text-3xl font-black text-primary leading-none">
+            {String(item.value).padStart(2, '0')}
+          </div>
+          <div className="text-[9px] md:text-[10px] text-secondary-foreground uppercase font-black tracking-widest mt-2">
+            {item.label}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function Hero() {
   const [role, setRole] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [message, setMessage] = useState('');
+
+  const masterclassDate = useMemo(() => new Date(MASTERCLASS_DATE_TIME), []);
+  const eventDateLabel = useMemo(() => formatEventDate(masterclassDate), [masterclassDate]);
+  const eventDayLabel = useMemo(() => formatEventDay(masterclassDate), [masterclassDate]);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -53,7 +145,6 @@ export function Hero() {
   return (
     <section className="relative pt-32 pb-20 px-6 overflow-hidden">
       <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-start">
-        {/* Left Side: Content */}
         <motion.div
           initial={{ opacity: 0, x: -50 }}
           whileInView={{ opacity: 1, x: 0 }}
@@ -67,7 +158,7 @@ export function Hero() {
               LIVE MASTERCLASS
             </Badge>
             <span className="text-sm text-secondary-foreground font-bold uppercase">
-              Sat, 9 May | 8:00 PM
+              {eventDateLabel}
             </span>
           </div>
 
@@ -91,7 +182,7 @@ export function Hero() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-12">
             <div className="flex flex-col gap-2 p-4 glass rounded-2xl border-white/5">
               <Calendar className="w-5 h-5 text-primary" />
-              <span className="text-sm font-bold">This Saturday</span>
+              <span className="text-sm font-bold">This {eventDayLabel}</span>
             </div>
             <div className="flex flex-col gap-2 p-4 glass rounded-2xl border-white/5">
               <PlayCircle className="w-5 h-5 text-primary" />
@@ -111,11 +202,10 @@ export function Hero() {
             <span className="text-sm font-bold text-secondary-foreground/60 uppercase tracking-widest block">
               Event starts in:
             </span>
-            <CountdownTimer />
+            <CountdownTimer targetDate={masterclassDate} />
           </div>
         </motion.div>
 
-        {/* Right Side: Glass Registration Form */}
         <motion.div
           id="registration-form"
           initial={{ opacity: 0, scale: 0.9, y: 50 }}
@@ -176,23 +266,14 @@ export function Hero() {
                       <label className="text-[10px] uppercase tracking-wider font-bold text-secondary-foreground flex items-center gap-2">
                         <Users className="w-3 h-3" /> Full Name
                       </label>
-                      <Input
-                        name="fullName"
-                        required
-                        className="h-14 bg-white/[0.03] border-white/10 focus:border-primary/50 text-base rounded-xl"
-                      />
+                      <Input name="fullName" required className="h-14 bg-white/[0.03] border-white/10 focus:border-primary/50 text-base rounded-xl" />
                     </div>
 
                     <div className="space-y-2">
                       <label className="text-[10px] uppercase tracking-wider font-bold text-secondary-foreground flex items-center gap-2">
                         <Terminal className="w-3 h-3" /> Email Address
                       </label>
-                      <Input
-                        name="email"
-                        required
-                        type="email"
-                        className="h-14 bg-white/[0.03] border-white/10 focus:border-primary/50 text-base rounded-xl"
-                      />
+                      <Input name="email" required type="email" className="h-14 bg-white/[0.03] border-white/10 focus:border-primary/50 text-base rounded-xl" />
                     </div>
                   </div>
 
@@ -201,23 +282,14 @@ export function Hero() {
                       <label className="text-[10px] uppercase tracking-wider font-bold text-secondary-foreground flex items-center gap-2">
                         <MessageSquare className="w-3 h-3" /> Phone Number
                       </label>
-                      <Input
-                        name="phone"
-                        required
-                        type="tel"
-                        className="h-14 bg-white/[0.03] border-white/10 focus:border-primary/50 text-base rounded-xl"
-                      />
+                      <Input name="phone" required type="tel" className="h-14 bg-white/[0.03] border-white/10 focus:border-primary/50 text-base rounded-xl" />
                     </div>
 
                     <div className="space-y-2">
                       <label className="text-[10px] uppercase tracking-wider font-bold text-secondary-foreground flex items-center gap-2">
                         <MapPin className="w-3 h-3" /> City
                       </label>
-                      <Input
-                        name="city"
-                        required
-                        className="h-14 bg-white/[0.03] border-white/10 focus:border-primary/50 text-base rounded-xl"
-                      />
+                      <Input name="city" required className="h-14 bg-white/[0.03] border-white/10 focus:border-primary/50 text-base rounded-xl" />
                     </div>
                   </div>
 
@@ -245,11 +317,7 @@ export function Hero() {
                       </select>
 
                       {role === 'other' && (
-                        <Input
-                          name="otherRole"
-                          placeholder="Please mention your role"
-                          className="h-14 bg-white/[0.03] border-white/10 focus:border-primary/50 text-base rounded-xl"
-                        />
+                        <Input name="otherRole" placeholder="Please mention your role" className="h-14 bg-white/[0.03] border-white/10 focus:border-primary/50 text-base rounded-xl" />
                       )}
                     </div>
                   </div>
